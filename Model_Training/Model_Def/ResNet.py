@@ -78,7 +78,7 @@ class ResNet(nn.Module):
         self.input_channels = 64
 
         
-        self.conv1 = nn.Conv1d(2, self.input_channels, kernel_size=7, stride=2, padding=3,
+        self.conv1 = nn.Conv1d(1, self.input_channels, kernel_size=7, stride=2, padding=3,
                                bias=False) # 2CH -> 64CH, NowLen->Len/2
         self.bn1 = norm_layer(self.input_channels)
         self.relu = nn.ReLU(inplace=True) 

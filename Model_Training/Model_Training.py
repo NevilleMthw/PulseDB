@@ -6,7 +6,8 @@ from mat73 import loadmat
 from Model_Def.Trainer import Model_Trainer
 from Model_Def import ResNet
 
-
+print('Torch available or not:', torch.cuda.is_available())
+print('Number of GPUs available:', torch.cuda.device_count())
 
 def Seed(seed): 
     torch.manual_seed(seed)
@@ -32,11 +33,11 @@ class Dataset(data.Dataset):
 def Build_Dataset(Path, Label):
     Data = loadmat(Path)
     # Get the first two channels, which are the ECG and the PPG signals
-    return Dataset(Data['Subset']['Signals'][:, 0:2, :], Data['Subset'][Label])
+    return Dataset(Data['Subset']['Signals'][:, 1:2, :], Data['Subset'][Label])
 
 
 # Replace 'YOUR_PATH' with the folder of your generated Training, CalBased and CalFree testing subsets.
-data_folder = 'YOUR_PATH'
+data_folder = '/project/zouridakis/gzlab2/PulseDB/Subset_Files/'
 Train_File = data_folder+'Train_Subset.mat'
 Test_CalBased_File = data_folder+'CalBased_Test_Subset.mat'
 Test_CalFree_File = data_folder+'CalFree_Test_Subset.mat'
@@ -60,10 +61,24 @@ if __name__ == '__main__':
                 }
     # Setup training device
     torch.cuda.empty_cache()
-    device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
-    print(device)
-    print(torch.cuda.get_device_name(0))
+    
+    # Use cuda if available, otherwise CPU
+    device = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
+    print(f"Using device: {device}")
+    
+    if torch.cuda.is_available():
+        print(f"Primary GPU: {torch.cuda.get_device_name(0)}")
+        for i in range(torch.cuda.device_count()):
+            print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
+    
+    # Create the model
     model.to(device)
+    
+    # Wrap model with DataParallel if multiple GPUs are available
+    if torch.cuda.device_count() > 1:
+        print(f"Using {torch.cuda.device_count()} GPUs for training")
+        model = torch.nn.DataParallel(model)
+    
     # Instantiate optimizer and model trainer
     BP_optimizer = eval(Settings['BP_optimizer'])
     model_trainer = eval(Settings['trainer'])

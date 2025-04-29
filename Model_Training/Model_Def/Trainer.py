@@ -52,11 +52,11 @@ class Model_Trainer:
     def Model_Info(self):
         model = self.Model_Running
         print('-' * 10)
-        print('Model Structure:')
-        print(model)
+        # print('Model Structure:')
+        # print(model)
         num = sum(p.numel() for p in model.parameters() if p.requires_grad)
-        print('Trainable parameters: {}'.format(num))
-        print('Settings')
+        # print('Trainable parameters: {}'.format(num))
+        # print('Settings')
         for item, setting in self.YMLSettings.items():
             print(item, ':', setting)
         print('-' * 10)
@@ -75,7 +75,7 @@ class Model_Trainer:
 
   
         # Print model info to command line
-        Writer = SW(os.path.join('TensorBoard', TimeID))
+        Writer = SW(os.path.join('PulseDB/Model_Training/TensorBoard', TimeID))
         print('ModelID: '+ModelID)
         self.Model_Info()
         # Print model info to string so it can be documented in TensorBoard
@@ -91,12 +91,12 @@ class Model_Trainer:
 
         # Set up data loaders for the training and testing sets
         Train = data.DataLoader(
-            self.Train_Set, self.Train_Batchsize, shuffle=True, drop_last=False)
+            self.Train_Set, self.Train_Batchsize, shuffle=True, drop_last=False, num_workers=28, pin_memory=True, prefetch_factor=2)
         Test_Names = []
         Test_List = []
         for name, testdata in self.Test_Set_List.items():
             Test_Names.append(name)
-            Test_List.append(data.DataLoader(testdata, batch_size=128))
+            Test_List.append(data.DataLoader(testdata, batch_size=128, num_workers=6, pin_memory=True))
 
         Start_Time = time.time()
         # Set up keybaord interrupt, so when training process is interrupted, the model can still be save to files
